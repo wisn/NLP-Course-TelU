@@ -34,6 +34,11 @@ for line in train_lines:
         train_sents.append(sent)
         sent = []
         counter = counter+1
+
+if len(sent) > 0:
+    train_sents.append(sent)
+    sent = []
+
 counter = 0
 for line in test_lines:
     line = line.rstrip('\n')
@@ -50,8 +55,9 @@ for line in test_lines:
         sent = []
         counter = counter+1
 
-
-
+if len(sent) > 0:
+    test_sents.append(sent)
+    sent = []
 
 def word2features(sent, i):
     word = sent[i][0]
@@ -133,7 +139,41 @@ tagger = pycrfsuite.Tagger()
 tagger.open('sample.crfsuite')
 
 example_sent = test_sents[0]
+print()
 print(' '.join(sent2tokens(example_sent)), end='\n\n')
 
 print("Predicted:", ' '.join(tagger.tag(sent2features(example_sent))))
 print("Correct:  ", ' '.join(sent2labels(example_sent)))
+
+print()
+print()
+
+input_lines = []
+input_sents = []
+
+with open('kalimat_POSTag.txt', 'r') as f:
+    input_lines = f.readlines()
+
+counter = 0
+for line in input_lines:
+    line = line.rstrip('\n')
+    curr_tuple = ()
+    if len(line)>1:
+        line_part = line.split(" ")
+        t = (line_part[0], line_part[1])
+        #print(t)
+        sent.append(t)
+    else:
+        input_sents.append(sent)
+        sent = []
+        counter = counter+1
+
+if len(sent) > 0:
+    input_sents.append(sent)
+    sent = []
+
+X_input = [sent2features(s) for s in input_sents]
+
+print('Predicted Input Result')
+for input_sent in input_sents:
+    print("Predicted:", ' '.join(tagger.tag(sent2features(input_sent))))

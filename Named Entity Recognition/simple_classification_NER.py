@@ -29,6 +29,11 @@ def convert_label(raw_ne):
     if (raw_ne=='I-LOC'): new_label = 6
     return new_label
 
+def label_to_named_entity(label):
+    named_entities = ['O', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC']
+
+    return named_entities[label]
+
 # inisialisasi kode token dan postag
 token_dict = {}
 postag_dict = {}
@@ -62,6 +67,10 @@ for line in train_lines:
         sent = []
         counter = counter+1
 
+if len(sent) > 0:
+    train_sents.append(sent)
+    sent = []
+
 # data test
 counter = 0
 for line in test_lines:
@@ -79,6 +88,9 @@ for line in test_lines:
         sent = []
         counter = counter+1
 
+if len(sent) > 0:
+    test_sents.append(sent)
+    sent = []
 
 # kode untuk token/kata dan postag yang tidak muncul di data training, namun muncul di data testing
 token_dict['unk'] = 9999
@@ -97,7 +109,8 @@ def word2features(sent, i):
         word.isupper(), # fitur apakah karakter pertama token merupakan huruf kapital
         word.istitle(), # fitur apakah token merupakan title
         word.isdigit(), # fitur apakah token merupakan digit
-        postag_dict[postag] # fitur kode postag token
+        postag_dict[postag], # fitur kode postag token
+        
     ]
                 
     return features
@@ -124,6 +137,13 @@ for s in train_sents:
     for i in range(len(s)):
         X_train.append(word2features(s,i))
         y_train.append(s[i][2])
+
+print('xtrain')
+print(X_train[0])
+
+print('ytrain')
+print(y_train)
+
 # ekstraksi fitur data test
 X_test = []
 y_test = []
@@ -150,5 +170,57 @@ print(X_test[0])
 print(clf.predict(X_test[0].reshape(1,-1)))
 
 # Coba test, keseluruhan data test
+predictions = clf.predict(X_test)
+
 print('hasil klasifikasi data test:')
-print(clf.predict(X_test))
+print(predictions)
+
+test_named_entities = []
+for label in predictions:
+    test_named_entities.append(label_to_named_entity(label))
+
+print(test_named_entities)
+
+# Get the real input
+
+input_lines = []
+with open('kalimat_POSTag.txt', 'r') as f:
+    input_lines = f.readlines()
+
+input_sents = []
+
+counter = 0
+for line in input_lines:
+    line = line.rstrip('\n')
+    curr_tuple = ()
+    if len(line)>1:
+        line_part = line.split(" ")
+        t = (line_part[0], line_part[1])
+        #print(t)
+        sent.append(t)
+    else:
+        input_sents.append(sent)
+        sent = []
+        counter = counter+1
+
+if len(sent) > 0:
+    test_sents.append(sent)
+    sent = []
+
+X_input = []
+for s in input_sents:
+    for i in range(len(s)):
+        X_input.append(word2features(s,i))
+
+X_input = np.array(X_input)
+
+predictions = clf.predict(X_input)
+
+print()
+print('Predicted Input Result:')
+
+input_named_entities = []
+for label in predictions:
+    input_named_entities.append(label_to_named_entity(label))
+
+print(input_named_entities)
